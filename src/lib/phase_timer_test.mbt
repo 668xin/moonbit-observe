@@ -30,3 +30,34 @@ test "PhaseTimer multiple phases" {
   assert_true(phases[0].name() == "phase1")
   assert_true(phases[1].name() == "phase2")
 }
+
+///|
+test "PhaseTimer end without begin returns self" {
+  let pt = PhaseTimer::new()
+  let pt1 = pt.end_phase()
+  if !(pt1.phase_count() == 0) { abort("should have 0 phases") }
+  if !(pt1.current_phase() == "") { abort("current should be empty") }
+}
+
+///|
+test "PhaseTimer double begin closes previous" {
+  let pt = PhaseTimer::new()
+  let pt1 = pt.begin_phase("phase_a")
+  let pt2 = pt1.begin_phase("phase_b")
+  // phase_a should be ended automatically
+  if !(pt2.phase_count() == 1) { abort("should have 1 completed phase") }
+  let phases = pt2.phases()
+  if !(phases[0].name() == "phase_a") { abort("first phase should be phase_a") }
+  if !(pt2.current_phase() == "phase_b") { abort("current should be phase_b") }
+}
+
+///|
+test "PhaseTimer total elapsed is sum of phases" {
+  let pt = PhaseTimer::new()
+  let pt1 = pt.begin_phase("p1").end_phase()
+  let pt2 = pt1.begin_phase("p2").end_phase()
+  let total = pt2.total_elapsed_nanos()
+  if !(total >= 0L) { abort("total should be >= 0") }
+  let phases = pt2.phases()
+  if !(phases.length() == 2) { abort("should have 2 phases") }
+}

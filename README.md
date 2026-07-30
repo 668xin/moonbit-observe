@@ -129,6 +129,67 @@ let timer = timer.start()
 let (timer, elapsed_ns) = timer.stop()
 ```
 
+### 统计引擎
+
+```moonbit
+// StatisticalSummary — 累加式计算
+let summary = @lib.StatisticalSummary::new()
+  .add(100L).add(200L).add(300L)
+
+// 均值 / 方差 / 标准差
+summary.mean()    // → Some(200)
+summary.variance() // → Some(10000)
+summary.stddev()   // → Some(100)
+
+// 滑动窗口 — 固定容量环形缓冲
+let window = @lib.SlidingWindow::new(5)
+  .add(50L).add(10L).add(30L).add(20L).add(40L)
+window.median() // → Some(30)
+
+// 对数直方图 — P50/P90/P99 分位数
+let hist = @lib.LogHistogram::new()
+  .record(100L).record(200L).record(300L)
+hist.percentile(50) // → P50
+```
+
+### 基线持久化 & 退化检测
+
+```moonbit
+// 记录基线
+let summary = @lib.StatisticalSummary::new().add(100L).add(200L)
+let store = @lib.BaselineStore::new().add("compute_task", summary)
+
+// 检测退化（阈值 110%）
+let detector = @lib.RegressionDetector::new(store, 110)
+let current = @lib.StatisticalSummary::new().add(180L)
+match detector.detect("compute_task", current) {
+  Some(r) => if r.is_regression() { println("性能退化！") }
+  None => println("无基线数据")
+}
+```
+
+### Span 嵌套阶段计时
+
+```moonbit
+let parent = @lib.Span::new("request_handler").start()
+let child = @lib.Span::new("db_query").start()
+let child = child.stop()
+let parent = parent.add_child(child).stop()
+parent.total_elapsed_nanos() // 含子树累计
+```
+
+### PhaseTimer 连续阶段计时
+
+```moonbit
+let pt = @lib.PhaseTimer::new()
+  .begin_phase("receive")
+  .begin_phase("process")  // 自动结束 receive
+  .begin_phase("respond")  // 自动结束 process
+  .end_phase()
+pt.phases().length() // → 3
+pt.total_elapsed_nanos()
+```
+
 ### 报告器系统 `Reporter`
 
 #### ConsoleReporter（控制台输出）

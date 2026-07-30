@@ -127,6 +127,67 @@ let timer = timer.start()
 let (timer, elapsed_ns) = timer.stop()
 ```
 
+### Statistics Engine
+
+```moonbit
+// StatisticalSummary — cumulative statistics
+let summary = @lib.StatisticalSummary::new()
+  .add(100L).add(200L).add(300L)
+
+// Mean / Variance / StdDev
+summary.mean()    // → Some(200)
+summary.variance() // → Some(10000)
+summary.stddev()   // → Some(100)
+
+// Sliding window — fixed-capacity ring buffer
+let window = @lib.SlidingWindow::new(5)
+  .add(50L).add(10L).add(30L).add(20L).add(40L)
+window.median() // → Some(30)
+
+// Log histogram — P50/P90/P99 percentiles
+let hist = @lib.LogHistogram::new()
+  .record(100L).record(200L).record(300L)
+hist.percentile(50) // → P50
+```
+
+### Baseline Persistence & Regression Detection
+
+```moonbit
+// Record baseline
+let summary = @lib.StatisticalSummary::new().add(100L).add(200L)
+let store = @lib.BaselineStore::new().add("compute_task", summary)
+
+// Detect regression (threshold 110%)
+let detector = @lib.RegressionDetector::new(store, 110)
+let current = @lib.StatisticalSummary::new().add(180L)
+match detector.detect("compute_task", current) {
+  Some(r) => if r.is_regression() { println("Performance regression!") }
+  None => println("No baseline data")
+}
+```
+
+### Span Nested Timing
+
+```moonbit
+let parent = @lib.Span::new("request_handler").start()
+let child = @lib.Span::new("db_query").start()
+let child = child.stop()
+let parent = parent.add_child(child).stop()
+parent.total_elapsed_nanos() // includes child subtrees
+```
+
+### PhaseTimer Sequential Phase Timing
+
+```moonbit
+let pt = @lib.PhaseTimer::new()
+  .begin_phase("receive")
+  .begin_phase("process")  // auto-ends receive
+  .begin_phase("respond")  // auto-ends process
+  .end_phase()
+pt.phases().length() // → 3
+pt.total_elapsed_nanos()
+```
+
 ### Reporter System
 
 #### ConsoleReporter

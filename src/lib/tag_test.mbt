@@ -46,3 +46,31 @@ test "Tags get missing key" {
     None => () // expected
   }
 }
+
+///|
+test "Tags::new creates empty tags" {
+  let tags = Tags::new()
+  if !(tags.count() == 0) { abort("count should be 0") }
+}
+
+///|
+test "Tags::add duplicate key keeps duplicates" {
+  let tags = Tags::new().add_pair("env", "test").add_pair("env", "prod")
+  if !(tags.count() == 2) { abort("count should be 2 (duplicate keys allowed)") }
+}
+
+///|
+test "Tag::key and value roundtrip" {
+  let tag = Tag::new("key1", "value1")
+  if !(tag.key() == "key1") { abort("key mismatch") }
+  if !(tag.value() == "value1") { abort("value mismatch") }
+}
+
+///|
+test "Tags::from_array preserves order" {
+  let arr = [Tag::new("a", "1"), Tag::new("b", "2")]
+  let tags = Tags::from_array(arr)
+  let list = tags.list()
+  if !(list.length() == 2) { abort("length should be 2") }
+  if !(list[0].key() == "a") { abort("order not preserved") }
+}
