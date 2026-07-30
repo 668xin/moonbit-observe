@@ -9,3 +9,7 @@ _build/
 # OS
 .DS_Store
 Thumbs.db
+
+# 过时的开发文档（已废弃）
+moonbit-stopwatch开发流程.md
+开发计划.md
