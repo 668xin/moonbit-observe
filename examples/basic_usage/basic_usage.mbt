@@ -1,5 +1,5 @@
 ///|
-/// 秒表基本使用示例
+/// 秒表基本使用示例（含 Reporter）
 fn main {
   println("=== stopwatch 基本使用示例 ===")
   println("")
@@ -34,6 +34,12 @@ fn main {
   let sw4 = sw3.reset()
   println("6. 重置后 nanos: " + sw4.elapsed_nanos().to_string())
   println("   is_running: " + sw4.is_running().to_string())
+
+  // 7. 使用 ConsoleReporter 输出
+  println("")
+  println("7. ConsoleReporter 输出：")
+  let reporter = @lib.ConsoleReporter::new()
+  reporter.report_stopwatch("basic-demo", paused_nanos, [])
 
   println("")
   println("=== 示例结束 ===")

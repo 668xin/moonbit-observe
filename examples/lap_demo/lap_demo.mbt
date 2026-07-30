@@ -1,5 +1,5 @@
 ///|
-/// 分段计时（Lap）示例
+/// 分段计时（Lap）示例（含 Reporter）
 fn main {
   println("=== 分段计时示例 ===")
   println("")
@@ -44,13 +44,17 @@ fn main {
   println("")
   println("总圈数: " + sw3.lap_count().to_string())
 
-  // 清空分段
-  let sw4 = sw3.clear_laps()
-  println("清空后圈数: " + sw4.lap_count().to_string())
-
   // 暂停秒表
-  let sw5 = sw4.stop()
-  println("最终耗时: " + @lib.format_nanos(sw5.elapsed_nanos()))
+  let sw4 = sw3.stop()
+  let total_nanos = sw4.elapsed_nanos()
+
+  println("最终耗时: " + @lib.format_nanos(total_nanos))
+
+  // 使用 ConsoleReporter 展示分段详情
+  println("")
+  println("ConsoleReporter 分段输出：")
+  let reporter = @lib.ConsoleReporter::new()
+  reporter.report_stopwatch("lap-demo", total_nanos, sw3.list_laps())
 
   println("")
   println("=== 示例结束 ===")

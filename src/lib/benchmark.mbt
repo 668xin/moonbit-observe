@@ -51,6 +51,12 @@ pub fn BenchmarkResult::total_nanos(self : BenchmarkResult) -> Int64 {
 }
 
 ///|
+/// 创建 BenchmarkResult（用于反序列化等场景）
+pub fn BenchmarkResult::new(min_nanos : Int64, max_nanos : Int64, avg_nanos : Int64, total_nanos : Int64) -> BenchmarkResult {
+  { min_nanos, max_nanos, avg_nanos, total_nanos }
+}
+
+///|
 /// 创建基准测试配置
 ///
 /// 参数边界保护：run_times 非正数时给出友好提示并设为 1

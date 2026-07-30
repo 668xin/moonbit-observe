@@ -30,3 +30,14 @@
 ///
 /// 异步计时：
 ///   AsyncTimer    - 异步任务计时器（基于 Stopwatch）
+///
+/// 报告器：
+///   TimeUnit              - 时间单位枚举（Auto/Nanoseconds/Microseconds/Milliseconds/Seconds）
+///   format_nanos_with_unit - 按指定单位格式化纳秒
+///   ConsoleReporter       - 控制台格式化输出报告器
+///   JsonReporter          - JSON 序列化报告器（可累积多报告输出）
+///   CompositeReporter     - 多路报告组合器（支持 Console/Json 等混合输出）
+///
+/// 快照：
+///   Snapshot        - 时间点快照（捕获计时状态，支持 JSON 序列化/反序列化）
+///   SnapshotEntry   - 快照条目枚举（TimingEntry / BenchmarkEntry / SpanEntry）

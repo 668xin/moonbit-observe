@@ -1,5 +1,5 @@
 ///|
-/// Benchmark 基准测试示例
+/// Benchmark 基准测试示例（含 Reporter）
 ///
 /// 使用 BenchmarkRunner 对 Stopwatch 的 new() 方法进行性能测试
 fn main {
@@ -16,6 +16,13 @@ fn main {
   // 运行基准测试
   let result = runner.run(func)
 
-  // 打印结果
-  @lib.print_table(result)
+  // 使用 ConsoleReporter 输出
+  let reporter = @lib.ConsoleReporter::new()
+  reporter.report_benchmark(result)
+
+  // 使用 JsonReporter 序列化
+  let json_reporter = @lib.JsonReporter::new()
+  json_reporter.report_benchmark(result)
+  println("JSON output:")
+  println(json_reporter.output())
 }
