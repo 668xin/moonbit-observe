@@ -1,5 +1,5 @@
 import {
-  "668xin/moonbit-stopwatch/src/lib",
+  "668xin/moonbit-observe/src/lib",
   "moonbitlang/core/env",
 }
 
