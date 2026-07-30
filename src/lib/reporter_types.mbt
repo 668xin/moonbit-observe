@@ -8,6 +8,12 @@ pub enum TimeUnit {
   Seconds
 }
 
+pub fn TimeUnit::auto() -> TimeUnit { Auto }
+pub fn TimeUnit::nanoseconds() -> TimeUnit { Nanoseconds }
+pub fn TimeUnit::microseconds() -> TimeUnit { Microseconds }
+pub fn TimeUnit::milliseconds() -> TimeUnit { Milliseconds }
+pub fn TimeUnit::seconds() -> TimeUnit { Seconds }
+
 ///|
 /// 格式化纳秒为指定单位
 pub fn format_nanos_with_unit(nanos : Int64, unit : TimeUnit) -> String {

@@ -26,6 +26,8 @@ moonbit-observe 是面向 MoonBit 生态原创开发的通用运行时计时器�
 - 简易基准测试运行器（可选附属模块）：支持函数循环执行、基础耗时统计；
 - 基准测试结果 JSON 序列化导出（附属功能）；
 - 完善非法状态边界处理，规避重复启停、未启动恢复等异常调用；
+- 报告器系统：ConsoleReporter / JsonReporter / CompositeReporter 多路输出；
+- 快照系统：Snapshot 时间点状态捕获，支持 JSON 序列化与反序列化；
 - 编写完整单元测试，覆盖全部API分支、边界场景；
 - 提供多组可运行示例代码：基础计时、分段打点、异步任务计时；
 - 完善 README 文档，包含快速上手、API示例、使用场景说明；
@@ -127,12 +129,69 @@ let timer = timer.start()
 let (timer, elapsed_ns) = timer.stop()
 ```
 
+### 报告器系统 `Reporter`
+
+#### ConsoleReporter（控制台输出）
+
+```moonbit
+let reporter = @lib.ConsoleReporter::new()
+reporter.report_stopwatch("request", 1500000L, [])
+// 输出: === Stopwatch Report ===
+//         Name: request
+//         Elapsed: 1.5 ms
+
+// 可选单位 / 是否显示分段 / 是否显示标题
+let reporter = @lib.ConsoleReporter::with_options(
+  @lib.TimeUnit::milliseconds(), false, true,
+)
+```
+
+#### JsonReporter（JSON 序列化）
+
+```moonbit
+let reporter = @lib.JsonReporter::new()
+reporter.report_stopwatch("api", 1500L, [])
+reporter.report_benchmark(result)
+println(reporter.output())
+// 输出: [{"type":"stopwatch","name":"api",...},...]
+reporter.reset()  // 清空累积
+```
+
+#### Snapshot（快照 — 时间点状态捕获）
+
+```moonbit
+let snap = @lib.Snapshot::new(1234567890L)
+  .add_timing("request", 1500L, [])
+  .add_benchmark(result)
+
+let json = snap.to_json()           // → JSON 字符串
+let restored = @lib.Snapshot::from_json(json)  // → 反序列化
+```
+
+#### CompositeReporter（多路输出）
+
+```moonbit
+let composite = @lib.CompositeReporter::new()
+let console = @lib.ConsoleReporter::new()
+let json = @lib.JsonReporter::new()
+
+composite.add_console(console)  // 添加 Console 输出
+composite.add_json(json)        // 同时添加 JSON 输出
+
+// 一次调用同时输出到 Console + JSON
+composite.report_stopwatch("task", 1500L, [])
+println(json.output())
+```
+
 ## 完整示例
 
-- [basic_usage](examples/basic_usage/) — Stopwatch 基本使用
-- [lap_demo](examples/lap_demo/) — 分段计时演示
-- [bench_demo](examples/bench_demo/) — 基准测试演示
-- [demo](demo/) — 综合演示（含 format_time 格式化）
+- [basic_usage](examples/basic_usage/) — Stopwatch 基本使用 + ConsoleReporter
+- [lap_demo](examples/lap_demo/) — 分段计时演示 + ConsoleReporter
+- [bench_demo](examples/bench_demo/) — 基准测试演示 + ConsoleReporter + JsonReporter
+- [async_timer_demo](examples/async_timer_demo/) — 异步任务计时 + JsonReporter
+- [span_demo](examples/span_demo/) — Span 树 + ConsoleReporter + JsonReporter
+- [regression_demo](examples/regression_demo/) — 性能退化检测 + CompositeReporter
+- [demo](demo/) — 综合演示
 
 运行示例：
 
@@ -140,6 +199,9 @@ let (timer, elapsed_ns) = timer.stop()
 moon run examples/basic_usage
 moon run examples/lap_demo
 moon run examples/bench_demo
+moon run examples/async_timer_demo
+moon run examples/span_demo
+moon run examples/regression_demo
 moon run demo
 ```
 

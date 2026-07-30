@@ -11,6 +11,9 @@ A lightweight, high-performance runtime timing and metrics observation SDK built
 - **Formatting** — auto unit switching (ns / μs / ms / s)
 - **JSON export** — serialize benchmark results to JSON
 - **Async timer** — `AsyncTimer` wrapper for async task timing
+- **Reporter system** — Console/JSON/Multi-reporter output for all timing data
+- **Snapshot** — point-in-time capture with JSON serialization/deserialization
+- **CompositeReporter** — combine multiple reporters (console + JSON) in one pass
 - **Immutable design** — every operation returns a new instance, side-effect free
 
 ## Installation
@@ -124,12 +127,69 @@ let timer = timer.start()
 let (timer, elapsed_ns) = timer.stop()
 ```
 
+### Reporter System
+
+#### ConsoleReporter
+
+```moonbit
+let reporter = @lib.ConsoleReporter::new()
+reporter.report_stopwatch("request", 1500000L, [])
+// Output: === Stopwatch Report ===
+//         Name: request
+//         Elapsed: 1.5 ms
+
+// Configure time unit / show laps / show header
+let reporter = @lib.ConsoleReporter::with_options(
+  @lib.TimeUnit::milliseconds(), false, true,
+)
+```
+
+#### JsonReporter
+
+```moonbit
+let reporter = @lib.JsonReporter::new()
+reporter.report_stopwatch("api", 1500L, [])
+reporter.report_benchmark(result)
+println(reporter.output())
+// → [{"type":"stopwatch","name":"api",...},...]
+reporter.reset()  // clear accumulated entries
+```
+
+#### Snapshot — point-in-time capture
+
+```moonbit
+let snap = @lib.Snapshot::new(1234567890L)
+  .add_timing("request", 1500L, [])
+  .add_benchmark(result)
+
+let json = snap.to_json()           // → JSON string
+let restored = @lib.Snapshot::from_json(json)  // → deserialize
+```
+
+#### CompositeReporter — multi-output
+
+```moonbit
+let composite = @lib.CompositeReporter::new()
+let console = @lib.ConsoleReporter::new()
+let json = @lib.JsonReporter::new()
+
+composite.add_console(console)
+composite.add_json(json)
+
+// Single call → Console + JSON simultaneously
+composite.report_stopwatch("task", 1500L, [])
+println(json.output())
+```
+
 ## Examples
 
-- [basic_usage](examples/basic_usage/) — Basic stopwatch usage
-- [lap_demo](examples/lap_demo/) — Lap timing demo
-- [bench_demo](examples/bench_demo/) — Benchmark demo
-- [demo](demo/) — Comprehensive demo (including format_time)
+- [basic_usage](examples/basic_usage/) — Basic usage + ConsoleReporter
+- [lap_demo](examples/lap_demo/) — Lap timing + ConsoleReporter
+- [bench_demo](examples/bench_demo/) — Benchmark + ConsoleReporter + JsonReporter
+- [async_timer_demo](examples/async_timer_demo/) — Async timing + JsonReporter
+- [span_demo](examples/span_demo/) — Span tree + ConsoleReporter + JsonReporter
+- [regression_demo](examples/regression_demo/) — Regression detection + CompositeReporter
+- [demo](demo/) — Comprehensive demo
 
 Run examples:
 
@@ -137,6 +197,9 @@ Run examples:
 moon run examples/basic_usage
 moon run examples/lap_demo
 moon run examples/bench_demo
+moon run examples/async_timer_demo
+moon run examples/span_demo
+moon run examples/regression_demo
 moon run demo
 ```
 
