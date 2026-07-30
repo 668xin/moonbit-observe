@@ -72,7 +72,7 @@ fn run_demo() -> Unit {
 ///|
 /// 打印使用帮助
 fn print_usage() -> Unit {
-  println("moonbit-stopwatch - MoonBit Stopwatch CLI Tool")
+  println("moonbit-observe - MoonBit Observe CLI Tool")
   println("")
   println("Usage:")
   println("  stopwatch [options]")

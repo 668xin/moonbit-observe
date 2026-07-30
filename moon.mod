@@ -1,16 +1,16 @@
-name = "668xin/moonbit-stopwatch"
+name = "668xin/moonbit-observe"
 
 version = "0.1.0"
 
-description = "A lightweight stopwatch library built with MoonBit, supporting multiple laps and precise timing"
+description = "MoonBit 运行时计时与指标观测 SDK，提供 Stopwatch、链路计时、指标聚合、基准检测基础设施"
 
 license = "MIT"
 
-repository = "https://github.com/668xin/moonbit-stopwatch"
+repository = "https://github.com/668xin/moonbit-observe"
 
 readme = "README.md"
 
-keywords = [ "stopwatch", "timer", "moonbit", "utility" ]
+keywords = [ "observe", "metrics", "stopwatch", "timer", "moonbit" ]
 
 import {
   "moonbitlang/async@0.20.3",

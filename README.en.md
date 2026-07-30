@@ -1,6 +1,6 @@
-# moonbit-stopwatch
+# moonbit-observe
 
-A lightweight, high-performance stopwatch library built with [MoonBit](https://www.moonbitlang.com/). Supports **precise timing**, **lap timing**, **pause/resume**, **benchmarking**, and **JSON export**.
+A lightweight, high-performance runtime timing and metrics observation SDK built with [MoonBit](https://www.moonbitlang.com/). Supports **precise timing**, **lap timing**, **pause/resume**, **benchmarking**, and **JSON export**.
 
 ## Features
 
@@ -19,13 +19,13 @@ Add the dependency to your `moon.mod`:
 
 ```toml
 [deps]
-"668xin/moonbit-stopwatch" = "0.1.0"
+"668xin/moonbit-observe" = "0.1.0"
 ```
 
 Or via the CLI:
 
 ```bash
-moon add 668xin/moonbit-stopwatch
+moon add 668xin/moonbit-observe
 ```
 
 ## Quick Start
