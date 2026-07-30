@@ -171,3 +171,14 @@ test "elapsed_fmt on running returns non-empty formatted string" {
   // 格式化结果应以数字开头（如 "123 ns"）
   assert_true(fmt[0] >= '0' && fmt[0] <= '9')
 }
+
+///|
+test "Stopwatch with MockClock" {
+  let mock = MockClock::new(1_000_000L)  // start at 1ms
+  let sw = Stopwatch::new_with_clock(fn() { mock.now() })
+  assert_true(sw.elapsed_nanos() == 0L)
+  let sw1 = sw.start()
+  assert_true(sw1.elapsed_nanos() == 0L)  // still 0 since mock hasn't advanced
+  let sw2 = sw1.stop()
+  assert_true(sw2.elapsed_nanos() == 0L)
+}

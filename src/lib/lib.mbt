@@ -3,6 +3,13 @@
 ///
 /// 本包公开以下 API：
 ///
+/// 时钟抽象：
+///   Clock trait            - 时钟接口
+///   SystemClock            - 系统时钟实现
+///   ClockProvider          - 时钟提供者（可注入）
+///   ClockBackwardDetector  - 时钟回退检测
+///   MockClock              - 虚拟时钟（用于测试）
+///
 /// 核心秒表：
 ///   Stopwatch       - 秒表核心类型，支持 启动/暂停/恢复/重置/分段计时
 ///   StopwatchState  - 秒表状态枚举（Idle / Running / Paused）

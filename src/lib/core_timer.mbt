@@ -1,10 +1,4 @@
 ///|
-/// 获取当前纳秒时间戳（基于 @env.now() 的毫秒值转换）
-fn now_nanos() -> Int64 {
-  @env.now().reinterpret_as_int64() * 1_000_000L
-}
-
-///|
 /// 计时器状态
 pub enum StopwatchState {
   Idle
@@ -14,22 +8,38 @@ pub enum StopwatchState {
 
 ///|
 /// Stopwatch 秒表核心类型
+///
+/// 支持注入自定义时钟函数，默认使用 SystemClock
 pub struct Stopwatch {
   priv state : StopwatchState
   priv start_ts : Int64
   priv pause_acc : Int64
   priv lap_records : Array[LapRecord]
+  priv now_fn : () -> Int64
 }
 
 ///|
-/// 创建未启动的计时器实例
+/// 创建未启动的计时器实例（默认系统时钟）
 pub fn Stopwatch::new() -> Stopwatch {
-  Stopwatch::{
-    state: Idle,
-    start_ts: 0L,
-    pause_acc: 0L,
-    lap_records: [],
-  }
+  { state: Idle, start_ts: 0L, pause_acc: 0L, lap_records: [], now_fn: fn() { @env.now().reinterpret_as_int64() * 1_000_000L } }
+}
+
+///|
+/// 创建未启动的计时器实例（使用自定义时钟函数）
+pub fn Stopwatch::new_with_clock(now_fn : () -> Int64) -> Stopwatch {
+  { state: Idle, start_ts: 0L, pause_acc: 0L, lap_records: [], now_fn }
+}
+
+///|
+/// 创建未启动的计时器实例（使用 ClockProvider）
+pub fn Stopwatch::new_with_provider(provider : ClockProvider) -> Stopwatch {
+  Stopwatch::new_with_clock(fn() { provider.now() })
+}
+
+///|
+/// 获取当前纳秒时间（使用注入的时钟函数）
+fn Stopwatch::now(self : Stopwatch) -> Int64 {
+  (self.now_fn)()
 }
 
 ///|
@@ -37,7 +47,7 @@ pub fn Stopwatch::new() -> Stopwatch {
 pub fn Stopwatch::start(self : Stopwatch) -> Stopwatch {
   match self.state {
     Idle | Paused => {
-      let now = now_nanos()
+      let now = self.now()
       { ..self, state: Running, start_ts: now }
     }
     Running => self
@@ -49,7 +59,7 @@ pub fn Stopwatch::start(self : Stopwatch) -> Stopwatch {
 pub fn Stopwatch::stop(self : Stopwatch) -> Stopwatch {
   match self.state {
     Running => {
-      let now = now_nanos()
+      let now = self.now()
       let acc = self.pause_acc + (now - self.start_ts)
       { ..self, state: Paused, pause_acc: acc }
     }
@@ -62,7 +72,7 @@ pub fn Stopwatch::stop(self : Stopwatch) -> Stopwatch {
 pub fn Stopwatch::resume(self : Stopwatch) -> Stopwatch {
   match self.state {
     Paused => {
-      let now = now_nanos()
+      let now = self.now()
       { ..self, state: Running, start_ts: now }
     }
     Idle | Running => self
@@ -72,12 +82,7 @@ pub fn Stopwatch::resume(self : Stopwatch) -> Stopwatch {
 ///|
 /// 重置计时器，返回新的实例
 pub fn Stopwatch::reset(_self : Stopwatch) -> Stopwatch {
-  Stopwatch::{
-    state: Idle,
-    start_ts: 0L,
-    pause_acc: 0L,
-    lap_records: [],
-  }
+  Stopwatch::new_with_clock(_self.now_fn)
 }
 
 ///|
@@ -85,7 +90,7 @@ pub fn Stopwatch::reset(_self : Stopwatch) -> Stopwatch {
 pub fn Stopwatch::elapsed_nanos(self : Stopwatch) -> Int64 {
   match self.state {
     Running => {
-      let now = now_nanos()
+      let now = self.now()
       self.pause_acc + (now - self.start_ts)
     }
     Paused => self.pause_acc
@@ -115,7 +120,7 @@ pub fn Stopwatch::elapsed_secs(self : Stopwatch) -> Double {
 ///|
 /// 记录一个分段，返回 (新实例, LapRecord)
 pub fn Stopwatch::lap(self : Stopwatch, label : String) -> (Stopwatch, LapRecord) {
-  let now = now_nanos()
+  let now = self.now()
   let current_split = match self.state {
     Running => self.pause_acc + (now - self.start_ts)
     _ => self.pause_acc
@@ -126,11 +131,7 @@ pub fn Stopwatch::lap(self : Stopwatch, label : String) -> (Stopwatch, LapRecord
     0L
   }
   let lap_nanos = current_split - prev_total
-  let record = LapRecord::{
-    label,
-    lap_nanos,
-    total_nanos: current_split,
-  }
+  let record = LapRecord::{ label, lap_nanos, total_nanos: current_split }
   let sw = { ..self, lap_records: self.lap_records + [record] }
   (sw, record)
 }
