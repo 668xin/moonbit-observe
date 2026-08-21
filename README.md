@@ -33,6 +33,27 @@ moonbit-observe 是面向 MoonBit 生态原创开发的通用运行时计时器�
 - 完善 README 文档，包含快速上手、API示例、使用场景说明；
 - 提供命令行示例程序，直观展示计时器使用效果。
 
+## 安装
+
+在 `moon.mod` 中添加依赖：
+
+```toml
+[deps]
+"668xin/moonbit-observe" = "0.1.0"
+```
+
+或通过命令行添加：
+
+```bash
+moon add 668xin/moonbit-observe
+```
+
+引入后即可使用：
+
+```moonbit
+import "668xin/moonbit-observe/src/lib" as lib
+```
+
 ## 快速开始
 
 ```moonbit
@@ -118,6 +139,54 @@ let json = @lib.result_to_json(result)
 
 // 时间格式化：HH:MM:SS.mmm
 @lib.format_time(3661.123)      // → "01:01:01.123"
+```
+
+### 时钟抽象 `Clock`
+
+`moonbit-observe` 提供可注入的时钟抽象层，解耦业务代码对系统时钟的硬编码依赖。
+
+```moonbit
+// 默认系统时钟
+let sw = @lib.Stopwatch::new()
+
+// 自定义时钟函数（如单调时钟、Mock 时钟）
+let sw = @lib.Stopwatch::new_with_clock(fn() { 1_700_000_000_000L })
+
+// ClockProvider — 统一时钟注入
+let provider = @lib.ClockProvider::system()
+let sw = @lib.Stopwatch::new_with_provider(provider)
+
+// ClockBackwardDetector — 检测系统时钟回退
+let detector = @lib.ClockBackwardDetector::new()
+let (detector, went_back) = detector.check(1_700_000_000_000L)
+detector.backward_count() // → 回退次数
+```
+
+测试时使用 `MockClock` 精确控制时间推进：
+
+```moonbit
+let clock = @lib.MockClock::new(0L).advance_millis(100L)
+clock.now() // → 100_000_000
+```
+
+### 标签 `Tag` & 并发 `SharedStopwatch`
+
+```moonbit
+// Tag — key-value 标签体系
+let tags = @lib.Tags::new()
+  .add_pair("service", "api")
+  .add_pair("version", "v1")
+tags.get("service") // → Some("api")
+
+// TaggedStopwatch — 携带标签的计时器
+let tw = @lib.TaggedStopwatch::new(tags).start()
+let tw = tw.stop()
+tw.tags().count() // → 2
+
+// SharedStopwatch — 共享计时器（多协程安全，带唯一 ID）
+let shared = @lib.SharedStopwatch::new().start()
+let shared = shared.stop()
+shared.id() // → 唯一实例 ID
 ```
 
 ### 异步计时 `AsyncTimer`
@@ -266,6 +335,22 @@ moon run examples/regression_demo
 moon run demo
 ```
 
+## 使用场景
+
+- **业务代码埋点**：在服务处理流程中记录多阶段耗时（如 HTTP 请求处理链路）
+- **多流程分段观测**：使用 `PhaseTimer` / `Span` 观察流水线各环节性能分布
+- **异步任务计时**：`AsyncTimer` 测量协程/异步任务的执行耗时
+- **持续性能回归检测**：`BaselineStore` + `RegressionDetector` 对比基线，自动发现性能退化
+- **观测数据导出**：`Snapshot` + `JsonReporter` 将运行时指标持久化，供外部工具绘图分析
+
+## 命令行工具
+
+项目附带一个 CLI 演示程序，直观展示计时器、分段、格式化等能力：
+
+```bash
+moon run src/cli -- --demo
+```
+
 ## 开发
 
 ```bash
@@ -278,6 +363,14 @@ moon test
 # 命令行工具
 moon run src/cli -- --demo
 ```
+
+## 项目数据
+
+| 指标 | 数值 |
+|------|------|
+| 单元测试 | 138 个（正常流程 + 边界场景全覆盖） |
+| 源码规模 | ~4,000+ LOC |
+| 外部依赖 | 仅 MoonBit 标准库（零第三方依赖） |
 
 ## 许可证
 

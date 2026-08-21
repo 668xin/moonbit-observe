@@ -1,6 +1,20 @@
 # moonbit-observe
 
-A lightweight, high-performance runtime timing and metrics observation SDK built with [MoonBit](https://www.moonbitlang.com/). Supports **precise timing**, **lap timing**, **pause/resume**, **benchmarking**, and **JSON export**.
+A lightweight, high-performance runtime timing and metrics observation SDK built with [MoonBit](https://www.moonbitlang.com/). Supports **precise timing**, **lap timing**, **pause/resume**, **benchmarking**, **statistics**, **regression detection**, and **JSON export**.
+
+## Project Intro
+
+moonbit-observe is an original, general-purpose runtime timing and metrics observation toolkit for the MoonBit ecosystem.
+
+The ecosystem currently lacks an out-of-the-box, standardized observation component supporting lap timing. Developers measuring elapsed time in business programs, scripts, or services can only hand-write ad-hoc timing code, missing capabilities like multi-phase lap timing, async task timing, and human-friendly formatting.
+
+The core positioning of this project is a **runtime instrumentation timing and observation tool** for multi-phase timing statistics and flow duration observation during application development. A simple benchmark capability is provided as an optional accessory, not the project core.
+
+> Differentiation from the existing moonbench:
+> moonbench targets `moon bench`, focusing on in-source unit-style benchmarking and CI performance comparison;
+> moonbit-observe targets runtime dynamic timing, with core capabilities being Stopwatch, lap timing, and async task timing — suitable for business code instrumentation and multi-flow phase duration observation. The use cases and core goals are completely different.
+
+The library is built purely on the MoonBit standard library with **zero external dependencies**, and can be directly imported into any MoonBit project.
 
 ## Features
 
@@ -116,6 +130,54 @@ let json = @lib.result_to_json(result)
 
 // Time formatting: HH:MM:SS.mmm
 @lib.format_time(3661.123)        // → "01:01:01.123"
+```
+
+### Clock Abstraction
+
+moonbit-observe provides an injectable clock abstraction layer, decoupling business code from hardcoded system clock calls.
+
+```moonbit
+// Default system clock
+let sw = @lib.Stopwatch::new()
+
+// Custom clock function (monotonic, mock, etc.)
+let sw = @lib.Stopwatch::new_with_clock(fn() { 1_700_000_000_000L })
+
+// ClockProvider — unified clock injection
+let provider = @lib.ClockProvider::system()
+let sw = @lib.Stopwatch::new_with_provider(provider)
+
+// ClockBackwardDetector — detect system clock rollback
+let detector = @lib.ClockBackwardDetector::new()
+let (detector, went_back) = detector.check(1_700_000_000_000L)
+detector.backward_count() // → number of rollbacks
+```
+
+Use `MockClock` in tests to precisely control time advancement:
+
+```moonbit
+let clock = @lib.MockClock::new(0L).advance_millis(100L)
+clock.now() // → 100_000_000
+```
+
+### Tags & Concurrency
+
+```moonbit
+// Tag — key-value tag system
+let tags = @lib.Tags::new()
+  .add_pair("service", "api")
+  .add_pair("version", "v1")
+tags.get("service") // → Some("api")
+
+// TaggedStopwatch — stopwatch with bound tags
+let tw = @lib.TaggedStopwatch::new(tags).start()
+let tw = tw.stop()
+tw.tags().count() // → 2
+
+// SharedStopwatch — shared stopwatch (coroutine-safe, unique ID)
+let shared = @lib.SharedStopwatch::new().start()
+let shared = shared.stop()
+shared.id() // → unique instance ID
 ```
 
 ### Async Timer `AsyncTimer`
@@ -264,6 +326,22 @@ moon run examples/regression_demo
 moon run demo
 ```
 
+## Use Cases
+
+- **Business code instrumentation**: record multi-phase timing in service processing flows (e.g. HTTP request handling chains)
+- **Multi-flow phase observation**: use `PhaseTimer` / `Span` to observe performance distribution across pipeline stages
+- **Async task timing**: `AsyncTimer` measures the execution time of coroutines / async tasks
+- **Continuous regression detection**: `BaselineStore` + `RegressionDetector` compare against baselines to automatically spot performance regressions
+- **Observability data export**: `Snapshot` + `JsonReporter` persist runtime metrics for external charting and analysis
+
+## CLI Tool
+
+The project ships a CLI demo program that showcases timing, laps, and formatting:
+
+```bash
+moon run src/cli -- --demo
+```
+
 ## Development
 
 ```bash
@@ -276,6 +354,14 @@ moon test
 # CLI tool
 moon run src/cli -- --demo
 ```
+
+## Project Stats
+
+| Metric | Value |
+|--------|-------|
+| Unit tests | 138 (full coverage: normal flow + edge cases) |
+| Source size | ~4,000+ LOC |
+| External deps | MoonBit standard library only (zero third-party deps) |
 
 ## License
 

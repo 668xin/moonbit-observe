@@ -11,7 +11,3 @@ repository = "https://github.com/668xin/moonbit-observe"
 readme = "README.md"
 
 keywords = [ "observe", "metrics", "stopwatch", "timer", "moonbit" ]
-
-import {
-  "moonbitlang/async@0.20.3",
-}

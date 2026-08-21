@@ -31,6 +31,25 @@
 /// 异步计时：
 ///   AsyncTimer    - 异步任务计时器（基于 Stopwatch）
 ///
+/// 标签与并发：
+///   Tag               - 键值对标签
+///   Tags              - 标签集合
+///   TaggedStopwatch   - 携带标签的计时器
+///   SharedStopwatch   - 共享计时器（多协程安全，带唯一 ID）
+///
+/// 链路计时：
+///   Span       - 嵌套阶段计时（父子层次，自动累计子树耗时）
+///   PhaseTimer - 连续命名阶段计时
+///
+/// 统计与直方图：
+///   StatisticalSummary - 累加式统计（均值/方差/标准差/min/max/range）
+///   SlidingWindow      - 固定容量滑动窗口（环形缓冲 + 中位数）
+///   LogHistogram       - 对数直方图（P50/P90/P99 分位数）
+///
+/// 基线 & 回归检测：
+///   BaselineStore     - 基线存储（JSON 序列化/反序列化）
+///   RegressionDetector - 性能退化检测（可配置阈值百分比）
+///
 /// 报告器：
 ///   TimeUnit              - 时间单位枚举（Auto/Nanoseconds/Microseconds/Milliseconds/Seconds）
 ///   format_nanos_with_unit - 按指定单位格式化纳秒
